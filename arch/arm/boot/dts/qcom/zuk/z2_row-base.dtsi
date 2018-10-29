@@ -83,23 +83,6 @@
 		};
 	};
 
-	i2c@7579000 { /*this is for maxim_sensor max86100*/
-		status = "ok";
-		max86x00@57 {
-			compatible = "max86x00";
-			reg = <0x57>;
-			interrupt-parent = <&tlmm>;
-			pinctrl-names = "default";
-			pinctrl-0 = <&max86x00_default>;
-			interrupts = <123 0x1>;
-			vcc_i2c-supply = <&pm8994_lvs2>;
-			max86x00,hrm_int-gpio = <&tlmm 123 0x0>;
-			max86x00,hrm_en-gpio = <&tlmm 47 0x1>;
-			max86x00,vdd_1p8 = "maxim_i2c_vdd";
-			max86x00,i2c-pull-up;
-		};
-	};
-
 	i2c@7575000 {
 		cc_logic@01 {
 			cc_logic,usb-ss-gpio = <&tlmm 0 0x00>;
