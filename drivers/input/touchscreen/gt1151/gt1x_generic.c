@@ -92,7 +92,7 @@ static s32 gt1x_init_debug_node(void)
 		GTP_ERROR("Create proc entry /proc/%s FAILED!", GT1X_DEBUG_PROC_FILE);
 		return -1;
 	}
-	GTP_DEBUG("Created proc entry /proc/%s.", GT1X_DEBUG_PROC_FILE);
+	GTP_INFO("Created proc entry /proc/%s.", GT1X_DEBUG_PROC_FILE);
 	return 0;
 }
 
@@ -125,7 +125,7 @@ static ssize_t gt1x_debug_read_proc(struct file *file, char __user * page, size_
 
 	ptr += sprintf(ptr, "==== GT1X config read from chip====\n");
 	i = gt1x_i2c_read(GTP_REG_CONFIG_DATA, temp_data, GTP_CONFIG_MAX_LENGTH);
-	GTP_DEBUG("I2C TRANSFER: %d", i);
+	GTP_INFO("I2C TRANSFER: %d", i);
 	for (i = 0; i < GTP_CONFIG_MAX_LENGTH; i++) {
 		ptr += sprintf(ptr, "0x%02X,", temp_data[i]);
 
@@ -186,26 +186,26 @@ static ssize_t gt1x_debug_write_proc(struct file *file, const char *buffer, size
 
 	//force clear gt1x_config
 	if (strcmp(mode_str, "clear_config") == 0) {
-		GTP_DEBUG("Force clear gt1x_config");
+		GTP_INFO("Force clear gt1x_config");
 		gt1x_send_cmd(GTP_CMD_CLEAR_CFG, 0);
 		return count;
 	}
 	if (strcmp(mode_str, "init") == 0) {
-		GTP_DEBUG("Init panel");
+		GTP_INFO("Init panel");
 		gt1x_init_panel();
 		return count;
 	}
 	if (strcmp(mode_str, "chip") == 0) {
-		GTP_DEBUG("Get chip type:");
+		GTP_INFO("Get chip type:");
 		gt1x_get_chip_type();
 		return count;
 	}
 	if (strcmp(mode_str, "int") == 0) {
 		if (mode == 0) {
-			GTP_DEBUG("Disable irq.");
+			GTP_INFO("Disable irq.");
 			gt1x_irq_disable();
 		} else {
-			GTP_DEBUG("Enable irq.");
+			GTP_INFO("Enable irq.");
 			gt1x_irq_enable();
 		}
 		return count;
@@ -313,7 +313,7 @@ int gt1x_parse_config(char *filename, u8 * config)
 		GTP_ERROR("Read %d bytes from file failed!", len);
 	}
 
-	GTP_DEBUG("Parse config file: %s (%d bytes)", filename, len);
+	GTP_INFO("Parse config file: %s (%d bytes)", filename, len);
 
 	for (i = 0, cur_len = 0; i < len && cur_len < GTP_CONFIG_MAX_LENGTH;) {
 		if (buf[i] == ' ' || buf[i] == '\r' || buf[i] == '\n' || buf[i] == ',') {
@@ -449,7 +449,7 @@ static s32 gt1x_i2c_test(void)
 	while (retry++ < 3) {
 		ret = gt1x_i2c_read(GTP_REG_HW_INFO, (u8 *) & hw_info, sizeof(hw_info));
 		if (!ret) {
-			GTP_DEBUG("Hardware Info:%08X", hw_info);
+			GTP_INFO("Hardware Info:%08X", hw_info);
 			return ret;
 		}
 
@@ -525,7 +525,7 @@ s32 gt1x_get_info(void)
 	}
 	gt1x_int_type = opr_buf[0] & 0x03;
 
-	GTP_DEBUG("X_MAX = %d, Y_MAX = %d, TRIGGER = 0x%02x", gt1x_abs_x_max, gt1x_abs_y_max, gt1x_int_type);
+	GTP_INFO("X_MAX = %d, Y_MAX = %d, TRIGGER = 0x%02x", gt1x_abs_x_max, gt1x_abs_y_max, gt1x_int_type);
 
 	return 0;
 }
@@ -625,7 +625,7 @@ s32 gt1x_init_panel(void)
 
 	cfg_len = cfg_lens[sensor_id];
 
-	GTP_DEBUG("Config group%d used, length:%d", sensor_id, cfg_len);
+	GTP_INFO("Config group%d used, length:%d", sensor_id, cfg_len);
 
 	if (cfg_len < GTP_CONFIG_MIN_LENGTH || cfg_len > GTP_CONFIG_MAX_LENGTH) {
 		GTP_ERROR("Config group%d is INVALID! You need to check you header file CFG_GROUP section!", sensor_id + 1);
@@ -676,7 +676,7 @@ s32 gt1x_init_panel(void)
 		gt1x_config[TRIGGER_LOC] = (gt1x_config[TRIGGER_LOC] & 0xFC) | gt1x_int_type;
 	}
 
-	GTP_DEBUG("X_MAX=%d,Y_MAX=%d,TRIGGER=0x%02x,WAKEUP_LEVEL=%d", gt1x_abs_x_max, gt1x_abs_y_max, gt1x_int_type, gt1x_wakeup_level);
+	GTP_INFO("X_MAX=%d,Y_MAX=%d,TRIGGER=0x%02x,WAKEUP_LEVEL=%d", gt1x_abs_x_max, gt1x_abs_y_max, gt1x_int_type, gt1x_wakeup_level);
 
 	gt1x_cfg_length = cfg_len;
 	ret = gt1x_send_cfg(gt1x_config, gt1x_cfg_length);
@@ -808,7 +808,7 @@ s32 gt1x_reset_guitar(void)
 {
 	int ret;
 
-	GTP_DEBUG("GTP RESET!");
+	GTP_INFO("GTP RESET!");
 
 #ifdef CONFIG_GTP_INCELL_PANEL
 	ret = gt1x_incell_reset();
@@ -891,7 +891,7 @@ s32 gt1x_read_version(struct gt1x_version_info * ver_info)
 	sensor_id = buf[10] & 0x0F;
 	match_opt = (buf[10] >> 4) & 0x0F;
 
-	GTP_DEBUG("IC VERSION:GT%s_%06X(Patch)_%04X(Mask)_%02X(SensorID)", product_id, patch_id, mask_id >> 8, sensor_id);
+	GTP_INFO("IC VERSION:GT%s_%06X(Patch)_%04X(Mask)_%02X(SensorID)", product_id, patch_id, mask_id >> 8, sensor_id);
 
 	if (ver_info != NULL) {
 		ver_info->mask_id = mask_id;
@@ -935,7 +935,7 @@ s32 gt1x_get_chip_type(void)
 	}
 
 	if (gt1x_chip_type != CHIP_TYPE_NONE) {
-		GTP_DEBUG("Chip Type: %s", (gt1x_chip_type == CHIP_TYPE_GT1X) ? "GT1X" : "GT2X");
+		GTP_INFO("Chip Type: %s", (gt1x_chip_type == CHIP_TYPE_GT1X) ? "GT1X" : "GT2X");
 		return 0;
 	} else {
 		return -1;
@@ -962,7 +962,7 @@ static s32 gt1x_enter_sleep(void)
 
 		while (retry++ < 3) {
 			if (!gt1x_send_cmd(GTP_CMD_SLEEP, 0)) {
-				GTP_DEBUG("Enter sleep mode!");
+				GTP_INFO("Enter sleep mode!");
 				return 0;
 			}
 			msleep(10);
@@ -992,7 +992,7 @@ static s32 gt1x_wakeup_sleep(void)
 #if GTP_POWER_CTRL_SLEEP	/* power manager unit control the procedure */
 		if(!gesture_enabled){
 		gt1x_resume_reset();
-		GTP_DEBUG("Wakeup by poweron");
+		GTP_INFO("Wakeup by poweron");
 		return 0;
 		}else 
 			printk("gesture wake enabled\n");
@@ -1044,7 +1044,7 @@ static s32 gt1x_wakeup_sleep(void)
 		GTP_ERROR("Wake up sleep failed.");
 		return -1;
 	} else {
-		GTP_DEBUG("Wake up end.");
+		GTP_INFO("Wake up end.");
 		return 0;
 	}
 }
@@ -1083,7 +1083,7 @@ void gt1x_resume_reset(void)
 	if (rst_flag || update_info.status) {
 		return;
 	}
-	GTP_DEBUG("force_reset_guitar");
+	GTP_INFO("force_reset_guitar");
 	rst_flag = 1;
 	gt1x_power_switch(SWITCH_ON);
 	msleep(15);
@@ -1110,7 +1110,7 @@ void gt1x_power_reset(void)
 	if (rst_flag || update_info.status) {
 		return;
 	}
-	GTP_DEBUG("force_reset_guitar");
+	GTP_INFO("force_reset_guitar");
 	rst_flag = 1;
 	gt1x_irq_disable();
 	gt1x_irq_free();
@@ -1146,31 +1146,31 @@ s32 gt1x_request_event_handler(void)
 	GTP_DEBUG("Request state:0x%02x.", rqst_data);
 	switch (rqst_data & 0x0F) {
 	case GTP_RQST_CONFIG:
-		GTP_DEBUG("Request Config.");
+		GTP_INFO("Request Config.");
 		ret = gt1x_send_cfg(gt1x_config, gt1x_cfg_length);
 		if (ret) {
 			GTP_ERROR("Send gt1x_config error.");
 		} else {
-			GTP_DEBUG("Send gt1x_config success.");
+			GTP_INFO("Send gt1x_config success.");
 			rqst_data = GTP_RQST_RESPONDED;
 			gt1x_i2c_write(GTP_REG_RQST, &rqst_data, 1);
 		}
 		break;
 	case GTP_RQST_RESET:
-		GTP_DEBUG("Request Reset.");
+		GTP_INFO("Request Reset.");
 		gt1x_reset_guitar();
 		rqst_data = GTP_RQST_RESPONDED;
 		gt1x_i2c_write(GTP_REG_RQST, &rqst_data, 1);
 		break;
 	case GTP_RQST_BAK_REF:
-		GTP_DEBUG("Request Ref.");
+		GTP_INFO("Request Ref.");
 		break;
 	case GTP_RQST_MAIN_CLOCK:
-		GTP_DEBUG("Request main clock.");
+		GTP_INFO("Request main clock.");
 		break;
 #if GTP_HOTKNOT
 	case GTP_RQST_HOTKNOT_CODE:
-		GTP_DEBUG("Request HotKnot Code.");
+		GTP_INFO("Request HotKnot Code.");
 		break;
 #endif
 	default:
@@ -1517,7 +1517,7 @@ static void gt1x_ps_report(int state)
 	input_sync(gt1x_ps_dev->input_dev);
 #endif /* End PLATFROM_MTK */
 
-	GTP_DEBUG("Report proximity state: %s", state == PS_FARAWAY? "FARAWAY":"NEAR");
+	GTP_INFO("Report proximity state: %s", state == PS_FARAWAY? "FARAWAY":"NEAR");
 }
 
 static s32 gt1x_ps_enable(s32 enable)
@@ -1525,7 +1525,7 @@ static s32 gt1x_ps_enable(s32 enable)
 	u8 state;
 	s32 ret = -1;
 
-	GTP_DEBUG("Proximity function to be %s.", enable ? "on" : "off");
+	GTP_INFO("Proximity function to be %s.", enable ? "on" : "off");
 	state = enable ? 1 : 0;
 	if (gt1x_chip_type == CHIP_TYPE_GT1X)
 		ret = gt1x_i2c_write(GTP_REG_PROXIMITY_ENABLE, &state, 1);
@@ -1541,7 +1541,7 @@ static s32 gt1x_ps_enable(s32 enable)
 		gt1x_ps_dev->enabled = 0;
 	}
 	gt1x_ps_dev->state = PS_FARAWAY;
-	GTP_DEBUG("Proximity function %s %s.", state ? "enable" : "disable", ret ? "fail" : "success");
+	GTP_INFO("Proximity function %s %s.", state ? "enable" : "disable", ret ? "fail" : "success");
 	return ret;
 }
 
@@ -1574,7 +1574,7 @@ static s32 gt1x_ps_operate(void *self, u32 command, void *buff_in, s32 size_in, 
 	s32 value;
 	hwm_sensor_data *sensor_data;
 
-	GTP_DEBUG("psensor operator cmd:%d", command);
+	GTP_INFO("psensor operator cmd:%d", command);
 	switch (command) {
 	case SENSOR_DELAY:
 		if ((buff_in == NULL) || (size_in < sizeof(int))) {
@@ -1697,7 +1697,7 @@ static int gt1x_ps_init(void)
 		goto err_exit;
 	}
 
-	GTP_DEBUG("hwmsen attach OK.");
+	GTP_INFO("hwmsen attach OK.");
 	return 0;
 #else
 	gt1x_ps_dev->input_dev = input_allocate_device();
@@ -1747,7 +1747,7 @@ static int gt1x_ps_init(void)
 		}
 	}
 
-	GTP_DEBUG("Proximity sensor init OK.");
+	GTP_INFO("Proximity sensor init OK.");
 	return 0;
 err_create_file:
 	kobject_put(gt1x_ps_dev->kobj);
@@ -1782,7 +1782,7 @@ static void gt1x_ps_deinit(void)
 *			ESD Protect Module
 */
 #if GTP_ESD_PROTECT
-static int esd_work_cycle = 6000; // check ESD once every 60 seconds with a 100Hz timer.
+static int esd_work_cycle = 200;
 static struct delayed_work esd_check_work;
 static int esd_running = 0;
 static struct mutex esd_lock;
@@ -1790,6 +1790,7 @@ static void gt1x_esd_check_func(struct work_struct *);
 
 void gt1x_init_esd_protect(void)
 {
+	esd_work_cycle = 2 * HZ;	// HZ: clock ticks in 1 second generated by system
 	GTP_DEBUG("Clock ticks for an esd cycle: %d", esd_work_cycle);
 	INIT_DELAYED_WORK(&esd_check_work, gt1x_esd_check_func);
 	mutex_init(&esd_lock);
@@ -1806,13 +1807,13 @@ void gt1x_esd_switch(s32 on)
 	if (SWITCH_ON == on) {	/* switch on esd check */
 		if (!esd_running) {
 			esd_running = 1;
-			GTP_DEBUG("Esd protector started!");
+			GTP_INFO("Esd protector started!");
 			queue_delayed_work(gt1x_workqueue, &esd_check_work, esd_work_cycle);
 		}
 	} else {		/* switch off esd check */
 		if (esd_running) {
 			esd_running = 0;
-			GTP_DEBUG("Esd protector stoped!");
+			GTP_INFO("Esd protector stoped!");
 			cancel_delayed_work(&esd_check_work);
 		}
 	}
@@ -1826,7 +1827,7 @@ static void gt1x_esd_check_func(struct work_struct *work)
 	u8 esd_buf[4] = { 0 };
 
 	if (!esd_running) {
-		GTP_DEBUG("Esd protector suspended!");
+		GTP_INFO("Esd protector suspended!");
 		return;
 	}
 
@@ -1851,7 +1852,7 @@ static void gt1x_esd_check_func(struct work_struct *work)
 
 			gt1x_power_reset();
 		} else {
-			GTP_DEBUG("Esd protector suspended, no need reset!");
+			GTP_INFO("Esd protector suspended, no need reset!");
 		}
 	}
 
@@ -1859,7 +1860,7 @@ static void gt1x_esd_check_func(struct work_struct *work)
 	if (esd_running) {
 		queue_delayed_work(gt1x_workqueue, &esd_check_work, esd_work_cycle);
 	} else {
-		GTP_DEBUG("Esd protector suspended!");
+		GTP_INFO("Esd protector suspended!");
 	}
 	mutex_unlock(&esd_lock);
 }
@@ -2030,7 +2031,7 @@ static int gt1x_smart_cover_init(void)
 		goto exit_put_kobj;
 	}
 	
-	GTP_DEBUG("SmartCover module init OK.");
+	GTP_INFO("SmartCover module init OK.");
 	return 0;
 	
 exit_put_kobj:
@@ -2149,7 +2150,7 @@ void gt1x_charger_switch(s32 on)
 		if (!charger_running) {
 			charger_running = 1;
 			spin_unlock(&charger_lock);
-			GTP_DEBUG("Charger checker started!");
+			GTP_INFO("Charger checker started!");
 			queue_delayed_work(gt1x_workqueue, &charger_switch_work, charger_work_cycle);
 		} else {
 			spin_unlock(&charger_lock);
@@ -2159,7 +2160,7 @@ void gt1x_charger_switch(s32 on)
 			charger_running = 0;
 			spin_unlock(&charger_lock);
 			cancel_delayed_work(&charger_switch_work);
-			GTP_DEBUG("Charger checker stoped!");
+			GTP_INFO("Charger checker stoped!");
 		} else {
 			spin_unlock(&charger_lock);
 		}
@@ -2186,7 +2187,7 @@ void gt1x_charger_config(s32 dir_update)
 
 	if (gt1x_get_charger_status()) {
 		if (!chr_pluggedin || dir_update) {
-			GTP_DEBUG("Charger Plugin.");
+			GTP_INFO("Charger Plugin.");
 			if (gt1x_send_cfg(gt1x_config_charger, gt1x_cfg_length)) {
 				GTP_ERROR("Send config for Charger Plugin failed!");
 			}
@@ -2197,7 +2198,7 @@ void gt1x_charger_config(s32 dir_update)
 		}
 	} else {
 		if (chr_pluggedin || dir_update) {
-			GTP_DEBUG("Charger Plugout.");
+			GTP_INFO("Charger Plugout.");
 			if (gt1x_send_cfg(gt1x_config, gt1x_cfg_length)) {
 				GTP_ERROR("Send config for Charger Plugout failed!");
 			}
@@ -2212,7 +2213,7 @@ void gt1x_charger_config(s32 dir_update)
 static void gt1x_charger_work_func(struct work_struct *work)
 {
 	if (!charger_running) {
-		GTP_DEBUG("Charger checker suspended!");
+		GTP_INFO("Charger checker suspended!");
 		return;
 	}
 
@@ -2243,10 +2244,10 @@ int gt1x_suspend(void)
 		gt1x_sc_dev->suspended = 1;
 	}
 #endif
-	GTP_DEBUG("Suspend start...");
+	GTP_INFO("Suspend start...");
 #if GTP_PROXIMITY
 	if (gt1x_ps_dev && gt1x_ps_dev->enabled) {
-		GTP_DEBUG("proximity is detected!");
+		GTP_INFO("proximity is detected!");
 		return 0;
 	}
 #endif
@@ -2255,14 +2256,14 @@ int gt1x_suspend(void)
 	if (hotknot_enabled) {
 #if HOTKNOT_BLOCK_RW
 		if (hotknot_paired_flag) {
-			GTP_DEBUG("hotknot is paired!");
+			GTP_INFO("hotknot is paired!");
 			return 0;
 		}
 #else
 		ret = gt1x_i2c_read_dbl_check(GTP_REG_HN_PAIRED, buf, sizeof(buf));		
 		if ((!ret && buf[0] == 0x55) || hotknot_transfer_mode) {
 			GTP_DEBUG("0x81AA: 0x%02X", buf[0]);
-			GTP_DEBUG("hotknot is paired!");
+			GTP_INFO("hotknot is paired!");
 			return 0;
 		}
 #endif
@@ -2304,7 +2305,7 @@ int gt1x_suspend(void)
 	delay 48 + 10ms to ensure reliability */
 	msleep(58);
 	is_suspend = 1;
-	GTP_DEBUG("Suspend end...");
+	GTP_INFO("Suspend end...");
 	return 0;
 }
 
@@ -2326,11 +2327,11 @@ int gt1x_resume(void)
 		gt1x_sc_dev->suspended = 0;
 	}
 #endif
-	GTP_DEBUG("Resume start...");
+	GTP_INFO("Resume start...");
 
 #if GTP_PROXIMITY
 	if (gt1x_ps_dev && gt1x_ps_dev->enabled) {
-		GTP_DEBUG("Proximity is on!");
+		GTP_INFO("Proximity is on!");
 		return 0;
 	}
 #endif
@@ -2340,7 +2341,7 @@ int gt1x_resume(void)
 	#if HOTKNOT_BLOCK_RW
 		if (hotknot_paired_flag) {
 			hotknot_paired_flag = 0;
-			GTP_DEBUG("Hotknot is paired!");
+			GTP_INFO("Hotknot is paired!");
 			return 0;
 		}
 	#endif
@@ -2392,7 +2393,7 @@ int gt1x_resume(void)
 #endif
 
 	is_suspend = 0;
-	GTP_DEBUG("Resume end.");
+	GTP_INFO("Resume end.");
 	return 0;
 }
 
