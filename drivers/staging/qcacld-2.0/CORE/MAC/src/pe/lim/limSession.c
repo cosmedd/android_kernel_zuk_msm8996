@@ -658,7 +658,7 @@ uint8_t pe_count_session_with_sme_session_id(tpAniSirGlobal mac_ctx,
         limLog(pMac, LOGE, FL("Invalid sessionId: %d"), sessionId);
         return(NULL);
     }
-    if(pMac->lim.gpSession[sessionId].valid == TRUE)
+    if((pMac->lim.gpSession[sessionId].valid == TRUE))
     {
         return(&pMac->lim.gpSession[sessionId]);
     }
@@ -751,6 +751,14 @@ void peDeleteSession(tpAniSirGlobal pMac, tpPESession psessionEntry)
     if (LIM_IS_AP_ROLE(psessionEntry)) {
        vos_timer_stop(&psessionEntry->protection_fields_reset_timer);
        vos_timer_destroy(&psessionEntry->protection_fields_reset_timer);
+    }
+
+    if (psessionEntry->reg_update_pwr_timer.state != 0) {
+        vos_timer_stop(&psessionEntry->reg_update_pwr_timer);
+        vos_timer_destroy(&psessionEntry->reg_update_pwr_timer);
+        if (psessionEntry->reg_update_pwr_timer.userData != NULL)
+            vos_mem_free(psessionEntry->reg_update_pwr_timer.userData);
+        psessionEntry->reg_update_pwr_timer.userData = NULL;
     }
 
 #if defined (WLAN_FEATURE_VOWIFI_11R)
